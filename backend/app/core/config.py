@@ -41,6 +41,9 @@ class Settings(BaseSettings):
     TIKTOK_CLIENT_SECRET: str = ""
     TIKTOK_REDIRECT_URI: str = "http://localhost:8000/api/v1/tiktok/callback"
     
+    # 文件存储配置
+    MEDIA_STORAGE_PATH: str = "./storage/media"
+    
     @property
     def DATABASE_URL(self) -> str:
         """构建数据库连接URL"""

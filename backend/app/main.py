@@ -6,7 +6,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from app.core import settings, init_db, close_db
-from app.routers import auth_router
+from app.routers import auth_router, tiktok_router, media_router, publish_router
 
 
 @asynccontextmanager
@@ -49,6 +49,9 @@ app.add_middleware(
 
 # 注册路由
 app.include_router(auth_router, prefix="/api/v1")
+app.include_router(tiktok_router, prefix="/api/v1")
+app.include_router(media_router, prefix="/api/v1")
+app.include_router(publish_router, prefix="/api/v1")
 
 
 @app.get("/")

@@ -43,24 +43,24 @@
             <span>首页</span>
           </el-menu-item>
           
-          <el-menu-item index="/materials" disabled>
+          <el-menu-item index="/tiktok-accounts">
+            <el-icon><Avatar /></el-icon>
+            <span>TikTok账号</span>
+          </el-menu-item>
+          
+          <el-menu-item index="/media-library">
             <el-icon><Picture /></el-icon>
             <span>素材管理</span>
           </el-menu-item>
           
-          <el-menu-item index="/publish" disabled>
+          <el-menu-item index="/video-publish">
             <el-icon><Promotion /></el-icon>
-            <span>内容发布</span>
+            <span>视频发布</span>
           </el-menu-item>
           
           <el-menu-item index="/messages" disabled>
             <el-icon><ChatDotSquare /></el-icon>
             <span>私信管理</span>
-          </el-menu-item>
-          
-          <el-menu-item index="/accounts" disabled>
-            <el-icon><Avatar /></el-icon>
-            <span>账号管理</span>
           </el-menu-item>
         </el-menu>
       </el-aside>

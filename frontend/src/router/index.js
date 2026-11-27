@@ -33,6 +33,24 @@ const routes = [
         name: 'Profile',
         component: () => import('@/views/home/Profile.vue'),
         meta: { title: '个人信息' }
+      },
+      {
+        path: 'tiktok-accounts',
+        name: 'TikTokAccounts',
+        component: () => import('@/views/tiktok/Accounts.vue'),
+        meta: { title: 'TikTok账号管理' }
+      },
+      {
+        path: 'media-library',
+        name: 'MediaLibrary',
+        component: () => import('@/views/materials/MediaLibrary.vue'),
+        meta: { title: '素材管理' }
+      },
+      {
+        path: 'video-publish',
+        name: 'VideoPublish',
+        component: () => import('@/views/publish/VideoPublish.vue'),
+        meta: { title: '视频发布' }
       }
     ]
   },

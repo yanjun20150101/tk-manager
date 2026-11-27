@@ -56,7 +56,7 @@ def init_db():
     创建所有表（如果不存在）
     """
     # 导入所有模型以确保它们被注册
-    from app.models import user  # noqa: F401
+    from app.models import user, tiktok_account, media, publish  # noqa: F401
     
     # 创建所有表
     Base.metadata.create_all(bind=engine)

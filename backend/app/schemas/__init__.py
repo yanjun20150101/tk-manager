@@ -12,6 +12,17 @@ from .user import (
     PermissionBase,
     PermissionResponse,
 )
+from .tiktok import (
+    TikTokAccountBase,
+    TikTokAccountResponse,
+    TikTokAuthCallback,
+    MediaUploadResponse,
+    MediaListItem,
+    MediaListResponse,
+    PublishVideoRequest,
+    PublishRecordResponse,
+    PublishStatusResponse,
+)
 
 __all__ = [
     "UserBase",
@@ -25,4 +36,13 @@ __all__ = [
     "RoleResponse",
     "PermissionBase",
     "PermissionResponse",
+    "TikTokAccountBase",
+    "TikTokAccountResponse",
+    "TikTokAuthCallback",
+    "MediaUploadResponse",
+    "MediaListItem",
+    "MediaListResponse",
+    "PublishVideoRequest",
+    "PublishRecordResponse",
+    "PublishStatusResponse",
 ]
