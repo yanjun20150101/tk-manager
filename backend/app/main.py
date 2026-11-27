@@ -6,23 +6,39 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from app.core import settings, init_db, close_db
-from app.routers import auth_router, tiktok_router, media_router, publish_router
+from app.routers import (
+    auth_router, 
+    tiktok_router, 
+    media_router, 
+    publish_router,
+    tasks_router,
+    categories_router
+)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """
     应用生命周期管理
-    启动时初始化数据库，关闭时清理资源
+    启动时初始化数据库和调度器，关闭时清理资源
     """
     # 启动时执行
     print("正在初始化数据库...")
     init_db()
+    
+    # 启动定时任务调度器
+    print("正在启动定时任务调度器...")
+    from app.services.scheduler_service import SchedulerService
+    SchedulerService.start_scheduler()
+    
     print("应用启动完成！")
     
     yield
     
     # 关闭时执行
+    print("正在关闭定时任务调度器...")
+    SchedulerService.shutdown_scheduler()
+    
     print("正在关闭数据库连接...")
     close_db()
     print("应用已关闭！")
@@ -52,6 +68,8 @@ app.include_router(auth_router, prefix="/api/v1")
 app.include_router(tiktok_router, prefix="/api/v1")
 app.include_router(media_router, prefix="/api/v1")
 app.include_router(publish_router, prefix="/api/v1")
+app.include_router(tasks_router, prefix="/api/v1")
+app.include_router(categories_router, prefix="/api/v1")
 
 
 @app.get("/")

@@ -55,7 +55,8 @@ class Media(Base):
     thumbnail_path = Column(String(500), comment="缩略图路径")
     
     # 分类和标签
-    category = Column(String(50), comment="分类")
+    category_id = Column(Integer, ForeignKey('media_categories.id', ondelete='SET NULL'), comment="分类ID")
+    category = Column(String(50), comment="分类名称（冗余字段）")
     tags = Column(Text, comment="标签（JSON数组）")
     
     # 状态信息
@@ -68,6 +69,7 @@ class Media(Base):
     
     # 关系
     user = relationship("User", backref="media")
+    media_category = relationship("MediaCategory", backref="media")
     
     def __repr__(self):
         return f"<Media(id={self.id}, title='{self.title}', type='{self.media_type}')>"
