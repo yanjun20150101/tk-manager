@@ -1,0 +1,57 @@
+/**
+ * 认证相关API
+ */
+import request from '@/utils/request'
+
+/**
+ * 用户登录
+ */
+export const login = (data) => {
+  return request({
+    url: '/auth/login',
+    method: 'post',
+    data
+  })
+}
+
+/**
+ * 用户注册
+ */
+export const register = (data) => {
+  return request({
+    url: '/auth/register',
+    method: 'post',
+    data
+  })
+}
+
+/**
+ * 用户登出
+ */
+export const logout = () => {
+  return request({
+    url: '/auth/logout',
+    method: 'post'
+  })
+}
+
+/**
+ * 获取当前用户信息
+ */
+export const getCurrentUser = () => {
+  return request({
+    url: '/auth/me',
+    method: 'get'
+  })
+}
+
+/**
+ * 刷新访问令牌
+ */
+export const refreshToken = (refresh_token) => {
+  return request({
+    url: '/auth/refresh',
+    method: 'post',
+    data: { refresh_token }
+  })
+}
