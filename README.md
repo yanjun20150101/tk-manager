@@ -105,14 +105,38 @@ brew services start redis
 # 登录MySQL
 mysql -u root -p
 
-# 执行初始化脚本
+# 执行初始化脚本（第一阶段）
 source backend/scripts/init_db.sql
+
+# 执行第二阶段更新脚本
+source backend/scripts/update_db_phase2.sql
 
 # 或者直接导入
 mysql -u root -p < backend/scripts/init_db.sql
+mysql -u root -p < backend/scripts/update_db_phase2.sql
 ```
 
-### 2. 后端配置和运行
+### 2. 安装视频处理工具
+
+**系统要求**: ffmpeg和ffprobe（用于视频元数据提取和缩略图生成）
+
+**Ubuntu/Debian:**
+```bash
+sudo apt-get install ffmpeg
+```
+
+**macOS:**
+```bash
+brew install ffmpeg
+```
+
+**验证安装:**
+```bash
+ffmpeg -version
+ffprobe -version
+```
+
+### 3. 后端配置和运行
 
 ```bash
 # 进入后端目录
@@ -130,9 +154,14 @@ source venv/bin/activate
 # 安装依赖
 pip install -r requirements.txt
 
-# 复制环境变量文件并配置
+# 复制环境变量文件
 cp .env.example .env
-# 编辑.env文件，配置数据库连接信息
+
+# 编辑.env文件，配置以下关键项：
+# 1. MYSQL_PASSWORD - 你的MySQL密码
+# 2. SECRET_KEY - 建议使用强随机字符串（可用命令生成: python -c "import secrets; print(secrets.token_urlsafe(32))"）
+# 3. TIKTOK_CLIENT_KEY - TikTok应用Client Key
+# 4. TIKTOK_CLIENT_SECRET - TikTok应用Client Secret
 
 # 创建管理员账号（可选）
 python scripts/create_admin.py
@@ -144,13 +173,35 @@ python -m app.main
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
+**环境变量配置说明:**
+
+`.env` 文件包含所有配置项，主要配置如下：
+
+| 配置项 | 说明 | 示例 |
+|--------|------|------|
+| MYSQL_PASSWORD | MySQL数据库密码 | your_password |
+| SECRET_KEY | JWT密钥（生产环境必须修改） | 使用随机字符串 |
+| TIKTOK_CLIENT_KEY | TikTok应用Client Key | 从TikTok开发者平台获取 |
+| TIKTOK_CLIENT_SECRET | TikTok应用Client Secret | 从TikTok开发者平台获取 |
+| TIKTOK_REDIRECT_URI | OAuth回调地址 | http://localhost:8000/api/v1/tiktok/callback |
+| MEDIA_STORAGE_PATH | 素材存储路径 | ./storage/media |
+
+**TikTok开发者账号申请:**
+1. 访问 https://developers.tiktok.com/
+2. 创建应用并获取 Client Key 和 Client Secret
+3. 配置 OAuth 回调地址（与 TIKTOK_REDIRECT_URI 一致）
+4. 申请所需的权限范围（scope）：
+   - `user.info.basic` - 获取用户基本信息
+   - `video.upload` - 上传视频
+   - `video.publish` - 发布视频
+
 后端服务将在 http://localhost:8000 启动
 
 API文档地址：
 - Swagger UI: http://localhost:8000/api/docs
 - ReDoc: http://localhost:8000/api/redoc
 
-### 3. 前端配置和运行
+### 4. 前端配置和运行
 
 ```bash
 # 进入前端目录
@@ -160,7 +211,8 @@ cd frontend
 npm install
 
 # 配置环境变量（可选）
-# 编辑.env文件，配置API地址
+# .env 文件已包含默认配置，通常不需要修改
+# 如需修改API地址，编辑 .env 文件中的 VITE_API_BASE_URL
 
 # 运行开发服务器
 npm run dev
@@ -179,6 +231,57 @@ npm run build
 - **密码**: admin123
 
 ⚠️ **重要**: 首次登录后请立即修改默认密码！
+
+## 完整启动流程
+
+### 首次启动（从零开始）
+
+```bash
+# 1. 确保MySQL和Redis已启动
+sudo systemctl start mysql
+sudo systemctl start redis
+
+# 2. 创建数据库
+mysql -u root -p < backend/scripts/init_db.sql
+mysql -u root -p < backend/scripts/update_db_phase2.sql
+
+# 3. 安装ffmpeg（如果未安装）
+sudo apt-get install ffmpeg  # Ubuntu/Debian
+# 或
+brew install ffmpeg  # macOS
+
+# 4. 配置后端
+cd backend
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
+# 编辑 .env 文件配置密码和TikTok API密钥
+python scripts/create_admin.py
+
+# 5. 启动后端（在backend目录）
+python -m app.main
+# 后端运行在 http://localhost:8000
+
+# 6. 配置并启动前端（新终端）
+cd frontend
+npm install
+npm run dev
+# 前端运行在 http://localhost:5173
+```
+
+### 日常启动
+
+```bash
+# 终端1 - 启动后端
+cd backend
+source venv/bin/activate
+python -m app.main
+
+# 终端2 - 启动前端
+cd frontend
+npm run dev
+```
 
 ## 功能模块（第一阶段）
 
@@ -248,36 +351,40 @@ npm run build
 
 ### 后端 (.env)
 
-```env
-# 应用配置
-APP_NAME=TikTok账号管理系统
-APP_VERSION=1.0.0
-DEBUG=True
+后端配置文件位于 `backend/.env`，请从 `.env.example` 复制并修改：
 
-# MySQL数据库
-MYSQL_HOST=localhost
-MYSQL_PORT=3306
-MYSQL_USER=root
-MYSQL_PASSWORD=your_password
-MYSQL_DATABASE=tiktok_manager
-
-# Redis
-REDIS_HOST=localhost
-REDIS_PORT=6379
-REDIS_PASSWORD=
-REDIS_DB=0
-
-# JWT
-SECRET_KEY=your-secret-key-change-this-in-production
-ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=30
-REFRESH_TOKEN_EXPIRE_DAYS=7
-
-# CORS
-ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000
+```bash
+cd backend
+cp .env.example .env
+# 然后编辑 .env 文件
 ```
 
+**关键配置项说明:**
+
+```env
+# 数据库密码（必须修改）
+MYSQL_PASSWORD=your_mysql_password
+
+# JWT密钥（生产环境必须修改为强随机字符串）
+# 生成方法: python -c "import secrets; print(secrets.token_urlsafe(32))"
+SECRET_KEY=your-secret-key-change-this-in-production
+
+# TikTok API配置（从TikTok开发者平台获取）
+TIKTOK_CLIENT_KEY=your_tiktok_client_key
+TIKTOK_CLIENT_SECRET=your_tiktok_client_secret
+
+# OAuth回调地址（需与TikTok开发者平台配置一致）
+TIKTOK_REDIRECT_URI=http://localhost:8000/api/v1/tiktok/callback
+
+# 素材存储路径
+MEDIA_STORAGE_PATH=./storage/media
+```
+
+**完整配置模板参见** `backend/.env.example` 文件，包含详细的配置说明。
+
 ### 前端 (.env)
+
+前端配置文件位于 `frontend/.env`，默认配置通常无需修改：
 
 ```env
 # API地址
@@ -310,20 +417,46 @@ VITE_API_BASE_URL=http://localhost:8000/api/v1
 
 ## 安全建议
 
-1. **生产环境**
-   - 修改 `SECRET_KEY` 为强随机字符串
+### 开发环境
+
+1. **不要将 `.env` 文件提交到Git**
+   - `.env` 文件已在 `.gitignore` 中
+   - 只提交 `.env.example` 模板文件
+
+2. **使用测试账号**
+   - 开发环境使用测试TikTok账号
+   - 不要使用真实用户数据
+
+### 生产环境
+
+1. **应用配置**
+   - 修改 `SECRET_KEY` 为强随机字符串（使用 `python -c "import secrets; print(secrets.token_urlsafe(32))"` 生成）
    - 设置 `DEBUG=False`
-   - 使用HTTPS
+   - 使用HTTPS协议
    - 配置防火墙规则
 
-2. **数据库**
-   - 使用强密码
-   - 限制数据库访问权限
+2. **数据库安全**
+   - 使用强密码（建议16位以上，包含大小写字母、数字、特殊字符）
+   - 限制数据库访问权限（只允许应用服务器IP访问）
    - 定期备份数据
+   - 启用MySQL慢查询日志
 
-3. **密码策略**
-   - 密码至少6位，包含字母和数字
-   - 建议用户使用更强的密码
+3. **TikTok API密钥**
+   - 妥善保管Client Secret
+   - 定期更新密钥
+   - 监控API调用量
+   - 配置回调URL白名单
+
+4. **文件存储**
+   - 配置文件上传大小限制
+   - 使用OSS（对象存储服务）存储素材
+   - 定期清理过期文件
+   - 设置文件访问权限
+
+5. **密码策略**
+   - 密码至少8位，包含字母、数字和特殊字符
+   - 启用密码复杂度验证
+   - 定期提醒用户更换密码
 
 ## 许可证
 
